@@ -1,4 +1,4 @@
-module macpool
+module github.com/josharsh/macpool
 
 go 1.21
 

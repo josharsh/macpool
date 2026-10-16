@@ -11,11 +11,11 @@ import (
 	"time"
 )
 
-// Status is what one Mac reports about itself. Later phases ship this over
-// the network so a scheduler can decide "does this job fit here?".
+// Status is what one Mac reports about itself. The scheduler uses it to
+// decide "does this job fit here?".
 // Version is reported by every agent. Clients refuse nodes on a different
 // version instead of discovering the mismatch as a 404 halfway through.
-const Version = "0.4"
+const Version = "0.1.0"
 
 type Status struct {
 	Version   string    `json:"version"`
@@ -60,18 +60,24 @@ func sysctlUint(key string) (uint64, error) {
 	return strconv.ParseUint(strings.TrimSpace(string(out)), 10, 64)
 }
 
-// readVMStat parses `vm_stat`. macOS does not have a "free memory" number
-// the way Linux does. It keeps "free" near zero on purpose and parks recently
-// used pages as "inactive" so they can be reused instantly. So what a job can
-// actually get is: free + inactive + speculative + purgeable.
+// readVMStat runs `vm_stat` and fills the memory fields of s.
 func readVMStat(s *Status) error {
 	out, err := exec.Command("vm_stat").Output()
 	if err != nil {
 		return fmt.Errorf("vm_stat: %w", err)
 	}
+	s.MemAvail, s.MemWired, s.MemCompr = parseVMStat(string(out))
+	return nil
+}
+
+// parseVMStat reads `vm_stat` output. macOS does not have a "free memory"
+// number the way Linux does. It keeps "free" near zero on purpose and parks
+// recently used pages as "inactive" so they can be reused instantly. So what a
+// job can actually get is: free + inactive + speculative + purgeable.
+func parseVMStat(out string) (avail, wired, compressed uint64) {
 	pages := map[string]uint64{}
 	var pageSize uint64 = 16384
-	sc := bufio.NewScanner(strings.NewReader(string(out)))
+	sc := bufio.NewScanner(strings.NewReader(out))
 	for sc.Scan() {
 		line := sc.Text()
 		if strings.HasPrefix(line, "Mach Virtual Memory Statistics") {
@@ -92,11 +98,8 @@ func readVMStat(s *Status) error {
 		}
 		pages[strings.TrimSpace(key)] = n
 	}
-	avail := pages["Pages free"] + pages["Pages inactive"] + pages["Pages speculative"] + pages["Pages purgeable"]
-	s.MemAvail = avail * pageSize
-	s.MemWired = pages["Pages wired down"] * pageSize
-	s.MemCompr = pages["Pages occupied by compressor"] * pageSize
-	return nil
+	avail = pages["Pages free"] + pages["Pages inactive"] + pages["Pages speculative"] + pages["Pages purgeable"]
+	return avail * pageSize, pages["Pages wired down"] * pageSize, pages["Pages occupied by compressor"] * pageSize
 }
 
 // readLoad parses `sysctl -n vm.loadavg`, which looks like "{ 2.34 2.50 2.60 }".

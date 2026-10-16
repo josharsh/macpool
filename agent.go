@@ -6,9 +6,8 @@ import (
 	"net/http"
 )
 
-// runAgent is the long-lived process every Mac in the pool runs. In Phase 1
-// it only answers "how are you doing?" over HTTP. Later phases add discovery
-// and job execution to this same process.
+// runAgent is the long-lived process every Mac in the pool runs: it announces
+// itself on the LAN and serves status, ad-hoc commands, and job execution.
 func runAgent(addr string) error {
 	http.HandleFunc("/status", func(w http.ResponseWriter, r *http.Request) {
 		s, err := readStatus()

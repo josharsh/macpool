@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -122,6 +121,5 @@ func execJob(w http.ResponseWriter, r *http.Request, id string) {
 
 func (j Job) depsHeader() string { return strings.Join(j.Deps, ",") }
 
+// shellQuote wraps s in single quotes so the shell passes it through verbatim.
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
-
-var _ = fmt.Sprintf
