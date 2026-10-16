@@ -58,6 +58,13 @@ func main() {
 			fatal(fmt.Errorf("usage: macpool run [-node host:port] \"<command>\""))
 		}
 		command := fs.Arg(0)
+		if strings.HasSuffix(command, ".yml") || strings.HasSuffix(command, ".yaml") {
+			code, err := runJobFile(command, *wait)
+			if err != nil {
+				fatal(err)
+			}
+			os.Exit(code)
+		}
 
 		addr := *nodeAddr
 		if addr == "" {
@@ -140,7 +147,7 @@ func printNodes(nodes []Node) {
 }
 
 func usage() {
-	fmt.Fprintln(os.Stderr, "usage:\n  macpool agent [-addr :7777]   run the node agent (announces itself on the LAN)\n  macpool nodes [-wait 2s]      list every agent on the LAN\n  macpool run [-node h:p] \"cmd\"  run a shell command on the best node, stream output\n  macpool status [host:port]    show this Mac, or ask a remote agent")
+	fmt.Fprintln(os.Stderr, "usage:\n  macpool agent [-addr :7777]   run the node agent (announces itself on the LAN)\n  macpool nodes [-wait 2s]      list every agent on the LAN\n  macpool run [-node h:p] \"cmd\"  run a shell command on the best node, stream output\n  macpool run job.yml           run a job file: bundle dir, fan out over input CSV\n  macpool status [host:port]    show this Mac, or ask a remote agent")
 	os.Exit(2)
 }
 

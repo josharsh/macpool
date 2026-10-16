@@ -1,0 +1,8 @@
+# Keyless smoke test for the pool: same shape as poems, no API, no deps.
+name: shout
+runtime: python3
+input: words.csv
+command: python3 shout.py {row}
+output: shouted.csv
+memory_gb: 0.1
+concurrency: 4

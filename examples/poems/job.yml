@@ -1,0 +1,9 @@
+name: poems
+runtime: python3
+deps: [anthropic]
+input: words.csv            # one task per row
+command: python3 poem.py {row}
+output: poems.csv           # each task prints its row + "poem" as JSON on the last line
+memory_gb: 0.5
+concurrency: 5
+secrets: [ANTHROPIC_API_KEY]
