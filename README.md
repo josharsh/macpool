@@ -107,31 +107,32 @@ the list.
 
 ## Status
 
-Early and honest about it. Everything above works and is exercised end to end, and this
+Early, and honest about it. Everything above works and is exercised end to end, and it
 is the whole current feature set. There is no central record of jobs yet: the CLI is the
 brain, so if your terminal dies mid-job, in-flight tasks are killed and completed rows are
-not remembered. Retries, resuming a half-finished job, and a control plane that lets two
-people submit at once without colliding are the next phase.
+not remembered. Next up, in order:
 
-The project is also a deliberately hands-on way to learn platform engineering, which is
-why there is a `docs/phase-N.md` for every step with the concepts it introduces and
-exercises to do by hand. If you want to understand how a scheduler, a process supervisor,
-and a tiny bit of a reverse proxy work from the inside, those are the place to start.
+- retries, and resuming a job that was half done
+- a control plane that remembers jobs and lets two people submit at once without colliding
+- TLS between the CLI and agents
+- `--join host:port` for networks where mDNS doesn't reach
+- long-running services behind a small gateway, scaled out when load rises
 
 ## Install
 
-Requires Go 1.21 or newer and macOS. One binary, no runtime dependencies.
+macOS and Go 1.21 or newer. One binary, no runtime dependencies.
 
 ```
-git clone https://github.com/josharsh/macpool
-cd macpool
-go build -o macpool .
-./macpool agent            # on every Mac in the pool
-./macpool nodes            # from any of them
+go install github.com/josharsh/macpool@latest
+macpool agent              # on every Mac in the pool
+macpool nodes              # from any of them
 ```
 
-Python 3 (ships with macOS) is needed on nodes for `runtime: python3`; Node for
-`runtime: node`.
+Or from a clone: `go build -o macpool .`
+
+Nodes need Python 3 (ships with macOS) for `runtime: python3` and Node for `runtime: node`.
+Both Macs must be on the same network segment, and a Mac on battery power is skipped
+until it is plugged in.
 
 ## Job file reference
 
@@ -146,6 +147,13 @@ Python 3 (ships with macOS) is needed on nodes for `runtime: python3`; Node for
 | `memory_gb` | a node must have at least this much available to be eligible |
 | `concurrency` | maximum tasks in flight across the whole pool |
 | `secrets` | environment variable names copied from your shell into each task |
+
+## Contributing
+
+Issues and pull requests are welcome. The codebase is one Go package, small enough to read
+in a sitting. `go test ./...` runs the unit tests; CI also checks `gofmt` and `go vet`.
+If you are proposing something larger than a fix, open an issue first so we can agree on
+the shape.
 
 ## License
 
