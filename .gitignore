@@ -1,0 +1,4 @@
+macpool
+.claude/
+examples/*/*.csv
+!examples/*/words.csv
